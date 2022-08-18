@@ -1,0 +1,195 @@
+---
+title: "Prediction of Nonself Peptide Presentation on Human MHC Class II"
+description: |
+  Peptide binding and prediction algorithms have continued to evolve and can effectively determine a peptide's likelihood of being an effective ligand for a given MHC class II molecule. For a peptide to elicit an immune response it must be recognized as foreign. In the context of transplantation, this immune response is most often driven by differences in donor and recipient HLA molecules. By comparing donor and recipient HLA, this function identifies the foreign donor peptides most likely to be presented on recipient class II MHC and therefore drive the CD4 immune response to transplantation between a given donor and recipient.
+output:
+  rmarkdown::html_vignette
+vignette: |
+  %\VignetteIndexEntry{Prediction of Nonself Peptide Presentation on Human MHC Class II}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\usepackage[utf8]{inputenc}
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
+
+```
+
+```{r libraries, message=FALSE}
+library(epitopR)
+library(tidyverse)
+library(devtools)
+library(ggseqlogo)
+library(here)
+library(fs)
+library(Biostrings)
+library(msa)
+
+```
+
+## Aims
+1. Determine peptides from self (recipient) MHC
+2. Determine peptides from donor MHC
+3. Identify foreign donor peptides (not in the self peptidome)
+4. Predict peptides binding to recipient MHC
+5. Threshold for only donor peptides able to be presented on recipient MHC
+
+## Set Parameters
+The mhcII_hu function requires several inputs. 
+
+1. Allele inputs: The presenting antigen, which is the self/recipient MHC II allele, is input as "ag_present." The stimulating antigen, which is the foreign/donor MHC molecule, is input as "ag_stim." Finally, self antigens from the homologous loci to the stimulating antigens are input as "ag_self." Each of these inputs can either be an individual allele, or a set of alleles. The sequences of each allele are pulled from the IPD-IMGT/HLA Database and can be viewed here [ftp site](ftp://ftp.ebi.ac.uk/pub/databases/ipd/imgt/hla/). Alternatively, if the advanced user wishes to generate their own reference sequences, this can be manipulated by running the ref.R script. 
+
+2. The "seq_len" parameter refers to the length of peptide to generate. For class II peptide presentation, we recommend a sequence length of 15. If the user wishes to consider peptides of varying lengths, they can input a string of multiple lengths separated by commas. 
+
+3. The "cutoff" parameter sets the threshold for strong and weak binders. Multiple prediction methods are used, each of which provide different outputs (i.e. IC50, "strength", "score"). Our justification for the default thresholds is below, however the user may choose to specify alternate cutoffs is desired.
+
+
+```{r}
+
+# input antigen name
+out_named_ag <- mhcII_hu(ag_present = c("DRB1_08_01"),
+                 ag_stim = c("DQA1_01_01","DQA1_04_01"),
+                 ag_self = c("DQA1_02_01"),
+                 seq_len = 15,
+                 method = "net")
+
+```
+
+
+Alternatively protein sequences for stimulating and self antigens can be input manually as stored variables. *Note this is not an option for the presenting allele "ag_present" which must be entered as a character string
+```{r}
+# input protein sequence
+dqa0101 <- "MILNKALLLGALALTTVMSPCGGEDIVADHVASCGVNLYQFYGPSGQYTHEFDGDEEFYVDLERKETAWRWPEFSKFGGFDPQGALRNMAVAKHNLNIMIKRYNSTAATNEVPEVTVFSKSPVTLGQPNTLICLVDNIFPPVVNITWLSNGQSVTEGVSETSFLSKSDHSFFKISYLTFLPSADEIYDCKVEHWGLDQPLLKHWEPEIPAPMSELTETVVCALGLSVGLVGIVVGTVFIIQGLRSVGASRHQGPL"
+
+dqa0202 <- "MILNKALMLGALALTTVMSPCGGEDIVADHVASYGVNLYQSYGPSGQFTHEFDGDEEFYVDLERKETVWKLPLFHRLRFDPQFALTNIAVLKHNLNILIKRSNSTAATNEVPEVTVFSKSPVTLGQPNTLICLVDNIFPPVVNITWLSNGHSVTEGVSETSFLSKSDHSFFKISYLTFLPSADEIYDCKVEHWGLDEPLLKHWEPEIPAPMSELTETVVCALGLSVGLVGIVVGTVLIIRGLRSVGASRHQGPL"
+
+dqa0401 <- "MILNKALLLGALALTTVMSPCGGEDIVADHVASYGVNLYQSYGPSGQYTHEFDGDEQFYVDLGRKETVWCLPVLRQFRFDPQFALTNIAVTKHNLNILIKRSNSTAATNEVPEVTVFSKSPVTLGQPNTLICLVDNIFPPVVNITWLSNGHSVTEGVSETSFLSKSDHSFFKISYLTFLPSADEIYDCKVEHWGLDEPLLKHWEPEIPAPMSELTETVVCALGLSVGLVGIVVGTVFIIRGLRSVGASRHQGPL"
+
+out_stored_ag <- mhcII_hu(ag_present =  c("DRB1_08_01"),
+                  ag_stim = c(dqa0101, dqa0401),
+                  ag_self = c(dqa0202),
+                  seq_len = 15,
+                  method = "net")
+
+```
+
+## Filter by Core Mutation Only
+#### Since MHCII has an open binding pocket, it presents peptides that may be several amino acids longer than core sequence required to bind that particular MHC. In some cases, the user may want to filter their results, in order to keep only peptides with a mutation in the core binding sequence (when compared to the equivalent self peptide). In order to acheive this, the stimulating and self antigens are aligned using a multiple sequence alignment tool, from the bioconductor package msa.The sequence positions of the core in the stimulating peptide are determined, and sequences are annotated to denote whether there is a sequence different between stimulating and self peptides in the core binding sequence. To use this function, the peptide dataframe needs to have peptides only from one stimulating antigen.
+
+```{r}
+# run prediction of dqa0202 and dqa0401
+out_single_ag <- mhcII_hu(ag_present =  c("DRB1_08_01"),
+                  ag_stim = c(dqa0101),
+                  ag_self = c(dqa0202),
+                  seq_len = 15,
+                  method = "net")
+
+
+core_mut_result <- core_mut(out_single_ag, ag_stim=dqa0101, ag_self=dqa0202)
+
+core_mut_result <- core_mut_result %>%
+  filter(core_mut=="yes") %>%
+  select(-c(core_mut))
+```
+
+## Additional Filtering
+### The user can explore the percentile rank and IC50 of initial results and choose to apply or adjust filtering as desired
+
+```{r}
+out_stored_ag %>%
+   mutate(antigen=as.factor(antigen)) %>%
+   ggplot(aes(antigen, rank_val, color=as.factor(strength_rank))) + 
+   geom_jitter(width=0.2) + 
+   xlab("Stimulating Antigen") + 
+   ylab("Adjusted Rank (Percentile)") + 
+   labs(color = "Predicted Binding") + 
+   theme_light()
+
+# Plot of rank x IC50
+
+out_stored_ag %>%
+  ggplot(aes(score_val, rank_val, color=as.factor(antigen), group=as.factor(antigen))) +
+  geom_point() +
+  facet_wrap(~as.factor(antigen)) + 
+  labs(color="Antigen")
+
+out_stored_ag <- mhcII_hu(ag_present =  c("DRB1_08_01"),
+                 ag_stim = c(dqa0101, dqa0401),
+                 ag_self = c(dqa0202),
+                 seq_len = 15,
+                 method = "net",
+                 cutoff_score = list(cutoff_netpan = c(50, 200),
+                                   cutoff_comblib = c(50, 200),
+                                   cutoff_nn_align = c(50, 200),
+                                   cutoff_sturniolo = c(2)),
+                 cutoff_rank= c(2, 10))
+
+# Plot of rank x IC50
+
+out_stored_ag %>%
+  ggplot(aes(score_val, rank_val, color=as.factor(antigen), group=as.factor(antigen))) +
+  geom_point() +
+  facet_wrap(~as.factor(antigen)) + 
+  labs(color="Antigen")
+
+```
+
+# Visualize Peptides By Seqlogo Plot
+
+```{r}
+dqa_01_peps <- out_named_ag %>%
+  filter(antigen=="DQA1_01_01") %>%
+  filter(strength_rank%in% c("weak", "strong"))
+
+ggseqlogo(dqa_01_peps$pep_stim)
+
+```
+
+## Default Cutoff Values
+
+Initial thresholds for IC50 thresholds were determined by Sette in 1998, with IC50<100 is strong, 100-1000 is weak (1). More recently, IEDB guidelines recommend using IC50 <50 and and 50-500 for strong and intermediate affinity groups. "As a rough guideline, peptides with IC50values <50 nM are considered high affinity, <500 nM intermediate affinity and <5000 nM low affinity. Most known epitopes have high or intermediate affinity. Some epitopes have low affinity, but no known T-cell epitope has an IC50 value greater than 5000." (2) Thresholds for IC50 can be used for most methods other than netmhcpan_el and Sturniolo. Sturniolo scoring positively correlates with binding affinity, therefore a higher score is preferred. In Hammer 1994, the authors concluded that the majority of peptides with strong binding affinity had a score >= 2 (3). There is no additional threshold for weak binding affinity, so only one threshold is used for this scoring system. For netmhcpan_ba and netmhcpan_el, the provided output "percent rank" is a transformation that normalizes prediction scores by comparison to the predicted scores of random natural peptides (4). Since netmhcpan_el is based off of studies of experimentally eluted peptides rather than studies of binding affinity, it can not be thresholded by IC50 as other scores. Rather, the provided "score" is the likelihood of the peptide being an eluted ligand - for example, a score of 0.66 means a likelihood of 66% that the peptide would be a ligand. For this method of peptide scoring, we have chosen to use the adjusted percent rank to threshold, with cutoffs of 2% and 10% as recommended (4). 
+
+## References: 
+1. Several Common HLA-DR Types Share Largely Overlapping Peptide Binding Repertoires
+Scott Southwood, John Sidney, Akihiro Kondo, Marie-France del Guercio, Ettore Appella, Stephen Hoffman, Ralph T. Kubo, Robert W. Chesnut, Howard M. Grey, Alessandro Sette. The Journal of Immunology April 1, 1998, 160 (7) 3363-3373.
+2. Vita R, Mahajan S, Overton JA, Dhanda SK, Martini S, Cantrell JR, Wheeler DK, Sette A, Peters B. The Immune Epitope Database (IEDB): 2018 update. Nucleic Acids Res. 2019 Jan 8;47(D1):D339-D343. doi: 10.1093/nar/gky1006. PMID: 30357391; PMCID: PMC6324067.
+3. Hammer, J., E. Bono, F. Gallazzi, C. Belunis, Z. Nagy, F. Sinigaglia. 1994. Precise prediction of major histocompatibility complex class II-peptide interaction based on peptide side chain scanning. J. Exp. Med. 180: 2353
+4. Reynisson B., Alvarez B., Paul S., Peters B., Nielsen M. 2020. NetMHCpan-4.1 and NetMHCIIpan-4.0: improved predictions of MHC antigen presentation by concurrent motif deconvolution and integration of MS MHC eluted ligand data. Nucleic Acids Res. 48(W1):W449-W454.
+
+
+## References by Prediction Method##
+
+Consensus:
+
+- Wang P, Sidney J, Kim Y, Sette A, Lund O, Nielsen M, Peters B. 2010. Peptide binding predictions for HLA DR, DP and DQ molecules. BMC Bioinformatics. 11:568.
+- Wang P, Sidney J, Dow C, Mothé B, Sette A, Peters B. 2008. A systematic assessment of MHC class II peptide binding predictions and evaluation of a consensus approach. PLoS Comput Biol. 4(4):e1000048.
+
+NN-align:
+
+- Jensen KK, Andreatta M, Marcatili P, Buus S, Greenbaum JA, Yan Z, Sette A, Peters B, Nielsen M. 2018. NN-align. Improved methods for predicting peptide binding affinity to MHC class II molecules. Immunology 154(3):394-406.
+
+- Nielsen M, Lund O. 2009. NN-align. An artificial neural network-based alignment algorithm for MHC class II peptide binding prediction. BMC Bioinformatics. 10:296.
+
+SMM-align:
+
+- Nielsen M, Lundegaard C, Lund O. 2007. Prediction of MHC class II binding affinity using SMM-align, a novel stabilization matrix alignment method. BMC Bioinformatics. 8:238.
+
+Combinatorial library:
+
+- Sidney J, Assarsson E, Moore C, Ngo S, Pinilla C, Sette A, Peters B. 2008. Quantitative peptide binding motifs for 19 human and mouse MHC class I molecules derived using positional scanning combinatorial peptide libraries. Immunome Res 4:2.
+
+Sturniolo:
+
+- Sturniolo T, Bono E, Ding J, Raddrizzani L, Tuereci O, Sahin U, Braxenthaler M, Gallazzi F, Protti MP, Sinigaglia F, Hammer J. 1999. Generation of tissue-specific and promiscuous HLA ligand databases using DNA microarrays and virtual HLA class II matrices. Nat Biotechnol. 17(6):555-561.
+
+NetMHCIIpan:
+
+- Reynisson B., Alvarez B., Paul S., Peters B., Nielsen M. 2020. NetMHCpan-4.1 and NetMHCIIpan-4.0: improved predictions of MHC antigen presentation by concurrent motif deconvolution and integration of MS MHC eluted ligand data. Nucleic Acids Res. 48(W1):W449-W454.
+
+- Jensen KK, Andreatta M, Marcatili P, Buus S, Greenbaum JA, Yan Z, Sette A, Peters B, Nielsen M. 2018. Improved methods for predicting peptide binding affinity to MHC class II molecules. Immunology 154(3):394-406.
+
+- Andreatta M, Karosiene E, Rasmussen M, Stryhn A, Buus S, and Nielsen M. 2015. Accurate pan-specific prediction of peptide-MHC class II binding affinity with improved binding core identification. Immunogenetics.67(11-12):641-50.
+PMID: 26416257 Download PDF
