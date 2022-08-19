@@ -26,8 +26,6 @@ library(ggseqlogo)
 library(here)
 library(fs)
 library(Biostrings)
-library(msa)
-
 ```
 
 ## Aims
@@ -77,7 +75,7 @@ out_stored_ag <- mhcII_hu(ag_present =  c("DRB1_08_01"),
 ```
 
 ## Filter by Core Mutation Only
-#### Since MHCII has an open binding pocket, it presents peptides that may be several amino acids longer than core sequence required to bind that particular MHC. In some cases, the user may want to filter their results, in order to keep only peptides with a mutation in the core binding sequence (when compared to the equivalent self peptide). In order to acheive this, the stimulating and self antigens are aligned using a multiple sequence alignment tool, from the bioconductor package msa.The sequence positions of the core in the stimulating peptide are determined, and sequences are annotated to denote whether there is a sequence different between stimulating and self peptides in the core binding sequence. To use this function, the peptide dataframe needs to have peptides only from one stimulating antigen.
+#### Since MHCII has an open binding pocket, it presents peptides that may be several amino acids longer than core sequence required to bind that particular MHC. In some cases, the user may want to filter their results, in order to keep only peptides with a mutation in the core binding sequence (when compared to the equivalent self peptide). In order to achieve this, input the aligned stimulating and self antigens (we recommend the multiple sequence alignment tool from the bioconductor package msa). The sequence positions of the core in the stimulating peptide are determined, and sequences are annotated to denote whether there is a sequence different between stimulating and self peptides in the core binding sequence. To use this function, the peptide dataframe needs to have peptides only from one stimulating antigen.
 
 ```{r}
 # run prediction of dqa0202 and dqa0401
@@ -87,8 +85,11 @@ out_single_ag <- mhcII_hu(ag_present =  c("DRB1_08_01"),
                   seq_len = 15,
                   method = "net")
 
+dqa0101_algn <- "MILNKALLLGALALTTVMSPCGGEDIVADHVASCGVNLYQFYGPSGQYTHEFDGDEEFYVDLERKETAWRWPEFSKFGGFDPQGALRNMAVAKHNLNIMIKRYNSTAATNEVPEVTVFSKSPVTLGQPNTLICLVDNIFPPVVNITWLSNGQSVTEGVSETSFLSKSDHSFFKISYLTFLPSADEIYDCKVEHWGLDQPLLKHWEPEIPAPMSELTETVVCALGLSVGLVGIVVGTVFIIQGLRSVGASRHQGPL"
 
-core_mut_result <- core_mut(out_single_ag, ag_stim=dqa0101, ag_self=dqa0202)
+dqa0202_algn <- "MILNKALMLGALALTTVMSPCGGEDIVADHVASYGVNLYQSYGPSGQFTHEFDGDEEFYVDLERKETVWKLPLFHRLR-FDPQFALTNIAVLKHNLNILIKRSNSTAATNEVPEVTVFSKSPVTLGQPNTLICLVDNIFPPVVNITWLSNGHSVTEGVSETSFLSKSDHSFFKISYLTFLPSADEIYDCKVEHWGLDEPLLKHWEPEIPAPMSELTETVVCALGLSVGLVGIVVGTVLIIRGLRSVGASRHQGPL"
+
+core_mut_result <- core_mut(out_single_ag, ag_stim=dqa0101_algn, ag_self=dqa0202_algn)
 
 core_mut_result <- core_mut_result %>%
   filter(core_mut=="yes") %>%

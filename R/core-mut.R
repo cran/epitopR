@@ -4,25 +4,21 @@
 #' @param dat_in
 #' dataframe, output of mhcII_hu(). The stimulating peptide, core pattern, start, and end positions will be pulled from this dataframe.
 #' @param ag_stim
-#' string, amino acid sequence of the stimulating antigen
+#' string, amino acid sequence of the stimulating antigen, aligned with self
 #' @param ag_self
-#' string, amino acid sequence of the self antigen
+#' string, amino acid sequence of the self antigen, aligned with stimulating
 #' @export
 #' @return data frame, peptide with flag of whether or not a mutation is in the core binding sequence
 #' @import
 #' tidyverse
-#' @importFrom
-#' Biostrings BString
-#' @importFrom
-#' Biostrings matchPattern
 
 core_mut <- function(dat_in, ag_stim, ag_self) {
-  if (!requireNamespace("Biostrings", quietly = TRUE) | !requireNamespace("msa", quietly = TRUE)) {
-    stop(
-      "Bioconductor package \"Biostrings\" or \"msa\" not found. Please install.",
-      call. = FALSE
-    )
-  }
+  # if (!requireNamespace("Biostrings", quietly = TRUE) | !requireNamespace("msa", quietly = TRUE)) {
+  #   stop(
+  #     "Bioconductor package \"Biostrings\" or \"msa\" not found. Please install.",
+  #     call. = FALSE
+  #   )
+  # }
 
   # step 1: validations on aa code, seq aligement, and colnames
   if (str_detect(ag_stim, "B|J|O|U|X|Z") | str_detect(ag_self, "B|J|O|U|X|Z")) {
@@ -30,12 +26,12 @@ core_mut <- function(dat_in, ag_stim, ag_self) {
   }
 
   if (nchar(ag_stim) != nchar(ag_self)) {
-    message("It seems input sequences are not aligned. aligning ....")
-    algn <- msa(c(ag_stim, ag_self), type = "protein")
-    ag_stim <- toupper(toString(unmasked(algn)[[1]]))
-    ag_self <- toupper(toString(unmasked(algn)[[2]]))
-    Sys.sleep(10)
-    message("Alignment is done.")
+    stop("It seems input sequences are not aligned. Please align.")
+    # algn <- msa(c(ag_stim, ag_self), type = "protein")
+    # ag_stim <- toupper(toString(unmasked(algn)[[1]]))
+    # ag_self <- toupper(toString(unmasked(algn)[[2]]))
+    # Sys.sleep(10)
+    # message("Alignment is done.")
   }
 
   if (!all(c("start", "end", "pep_stim", "core") %in% names(dat_in))) {

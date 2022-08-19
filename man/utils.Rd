@@ -9,7 +9,6 @@
 \alias{find_nonself_huII}
 \alias{pull_ag_self}
 \alias{find_core_mut}
-\alias{align_seq}
 \title{Basic functions of the package}
 \usage{
 preproc_huII(allele_in)
@@ -25,8 +24,6 @@ find_nonself_huII(dat_in)
 pull_ag_self(dat_in)
 
 find_core_mut(dat_in)
-
-align_seq(seq1, seq2)
 }
 \arguments{
 \item{allele_in}{a vector contains allele name(s)
@@ -53,13 +50,7 @@ prep_lbl_huII() concatenate allele strings for prediction table names}
 
 find_nonself_huII() find nonself binding peptides}
 
-\item{dat_in}{dataframe with pep_stim, core, pep_self selected from pull_ag_self
-
-align_seq() align protein sequences}
-
-\item{seq1}{path to the fasta or fastq file to read}
-
-\item{seq2}{path to the fasta or fastq file to read}
+\item{dat_in}{dataframe with pep_stim, core, pep_self selected from pull_ag_self}
 }
 \description{
 preproc_huII() format and validate allele names

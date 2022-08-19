@@ -13,8 +13,6 @@ library(ggseqlogo)
 library(here)
 library(fs)
 library(Biostrings)
-library(msa)
-
 
 ## -----------------------------------------------------------------------------
 
@@ -49,8 +47,11 @@ out_single_ag <- mhcII_hu(ag_present =  c("DRB1_08_01"),
                   seq_len = 15,
                   method = "net")
 
+dqa0101_algn <- "MILNKALLLGALALTTVMSPCGGEDIVADHVASCGVNLYQFYGPSGQYTHEFDGDEEFYVDLERKETAWRWPEFSKFGGFDPQGALRNMAVAKHNLNIMIKRYNSTAATNEVPEVTVFSKSPVTLGQPNTLICLVDNIFPPVVNITWLSNGQSVTEGVSETSFLSKSDHSFFKISYLTFLPSADEIYDCKVEHWGLDQPLLKHWEPEIPAPMSELTETVVCALGLSVGLVGIVVGTVFIIQGLRSVGASRHQGPL"
 
-core_mut_result <- core_mut(out_single_ag, ag_stim=dqa0101, ag_self=dqa0202)
+dqa0202_algn <- "MILNKALMLGALALTTVMSPCGGEDIVADHVASYGVNLYQSYGPSGQFTHEFDGDEEFYVDLERKETVWKLPLFHRLR-FDPQFALTNIAVLKHNLNILIKRSNSTAATNEVPEVTVFSKSPVTLGQPNTLICLVDNIFPPVVNITWLSNGHSVTEGVSETSFLSKSDHSFFKISYLTFLPSADEIYDCKVEHWGLDEPLLKHWEPEIPAPMSELTETVVCALGLSVGLVGIVVGTVLIIRGLRSVGASRHQGPL"
+
+core_mut_result <- core_mut(out_single_ag, ag_stim=dqa0101_algn, ag_self=dqa0202_algn)
 
 core_mut_result <- core_mut_result %>%
   filter(core_mut=="yes") %>%

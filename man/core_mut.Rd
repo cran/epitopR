@@ -9,9 +9,9 @@ core_mut(dat_in, ag_stim, ag_self)
 \arguments{
 \item{dat_in}{dataframe, output of mhcII_hu(). The stimulating peptide, core pattern, start, and end positions will be pulled from this dataframe.}
 
-\item{ag_stim}{string, amino acid sequence of the stimulating antigen}
+\item{ag_stim}{string, amino acid sequence of the stimulating antigen, aligned with self}
 
-\item{ag_self}{string, amino acid sequence of the self antigen}
+\item{ag_self}{string, amino acid sequence of the self antigen, aligned with stimulating}
 }
 \value{
 data frame, peptide with flag of whether or not a mutation is in the core binding sequence

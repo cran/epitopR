@@ -26,10 +26,6 @@
 #' find_core_mut() find mutation position to core
 #' @param dat_in dataframe with pep_stim, core, pep_self selected from pull_ag_self
 #'
-#' align_seq() align protein sequences
-#' @param seq1 path to the fasta or fastq file to read
-#' @param seq2 path to the fasta or fastq file to read
-#'
 #' @name utils
 #' @import
 #' dplyr
@@ -44,15 +40,9 @@
 #' @importFrom
 #' purrr map_df
 #' @importFrom
-#' Biostrings readAAStringSet
-#' @importFrom
-#' Biostrings unmasked
-#' @importFrom
-#' msa msa
-#' @importFrom
-#' msa msaClustalW
-#' @importFrom
 #' seqinr read.fasta
+#' @importFrom
+#' Biostrings BString
 #'
 #'
 NULL
@@ -378,21 +368,21 @@ find_core_mut <- function(dat_in) {
   return(dat_out)
 }
 
-#' @rdname utils
-align_seq <- function(seq1, seq2) {
-  # file validation
-  if (file.exists(seq1) & file.exists(seq2) ){
-    nms <- c(seq1, seq2)
-  } else {
-    stop("invaild file(s), please check.")
-  }
-
-  # load sequences to AA string object, and align the sequences
-  algn <- msa(readAAStringSet(nms))
-
-  # pull out aligned sequences
-  algn.seq <- c(toString(unmasked(algn)[[1]]), toString(unmasked(algn)[[2]]))
-
-  return(c(toupper(algn.seq[1]), toupper(algn.seq[2])))
-}
+##' @rdname utils
+# align_seq <- function(seq1, seq2) {
+#   # file validation
+#   if (file.exists(seq1) & file.exists(seq2) ){
+#     nms <- c(seq1, seq2)
+#   } else {
+#     stop("invaild file(s), please check.")
+#   }
+#
+#   # load sequences to AA string object, and align the sequences
+#   algn <- msa(readAAStringSet(nms))
+#
+#   # pull out aligned sequences
+#   algn.seq <- c(toString(unmasked(algn)[[1]]), toString(unmasked(algn)[[2]]))
+#
+#   return(c(toupper(algn.seq[1]), toupper(algn.seq[2])))
+# }
 
