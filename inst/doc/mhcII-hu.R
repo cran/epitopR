@@ -8,8 +8,6 @@ knitr::opts_chunk$set(
 ## ----libraries, message=FALSE-------------------------------------------------
 library(epitopR)
 library(tidyverse)
-library(devtools)
-library(ggseqlogo)
 library(here)
 library(fs)
 library(Biostrings)
@@ -60,11 +58,11 @@ core_mut_result <- core_mut_result %>%
 ## -----------------------------------------------------------------------------
 out_stored_ag %>%
    mutate(antigen=as.factor(antigen)) %>%
-   ggplot(aes(antigen, rank_val, color=as.factor(strength_rank))) + 
-   geom_jitter(width=0.2) + 
-   xlab("Stimulating Antigen") + 
-   ylab("Adjusted Rank (Percentile)") + 
-   labs(color = "Predicted Binding") + 
+   ggplot(aes(antigen, rank_val, color=as.factor(strength_rank))) +
+   geom_jitter(width=0.2) +
+   xlab("Stimulating Antigen") +
+   ylab("Adjusted Rank (Percentile)") +
+   labs(color = "Predicted Binding") +
    theme_light()
 
 # Plot of rank x IC50
@@ -72,7 +70,7 @@ out_stored_ag %>%
 out_stored_ag %>%
   ggplot(aes(score_val, rank_val, color=as.factor(antigen), group=as.factor(antigen))) +
   geom_point() +
-  facet_wrap(~as.factor(antigen)) + 
+  facet_wrap(~as.factor(antigen)) +
   labs(color="Antigen")
 
 out_stored_ag <- mhcII_hu(ag_present =  c("DRB1_08_01"),
@@ -91,7 +89,7 @@ out_stored_ag <- mhcII_hu(ag_present =  c("DRB1_08_01"),
 out_stored_ag %>%
   ggplot(aes(score_val, rank_val, color=as.factor(antigen), group=as.factor(antigen))) +
   geom_point() +
-  facet_wrap(~as.factor(antigen)) + 
+  facet_wrap(~as.factor(antigen)) +
   labs(color="Antigen")
 
 
@@ -100,6 +98,7 @@ dqa_01_peps <- out_named_ag %>%
   filter(antigen=="DQA1_01_01") %>%
   filter(strength_rank%in% c("weak", "strong"))
 
-ggseqlogo(dqa_01_peps$pep_stim)
+# library(ggseqlogo)
+#ggseqlogo(dqa_01_peps$pep_stim)
 
 

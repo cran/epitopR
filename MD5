@@ -1,15 +1,15 @@
-1bfcbc3e6a0f085c9036626433923cb2 *DESCRIPTION
+0fc422e8eb01ba1474785e92b719e1f0 *DESCRIPTION
 78d7851ccadb7088baa30538fa9c1d1f *LICENSE
 e0af296dced43529a01c34c1387985b9 *NAMESPACE
 60ed81d3274d56786e5a4e01ea4efd46 *R/core-mut.R
 4b5cc403b9d313fb0949eb3b3d109320 *R/globals.R
 e70383f957676262c84d4ae826f34e23 *R/mhcII-hu.R
 6f52541511e93293616573e7a94a5e13 *R/refs.R
-08a1d22f580ecb7c70ed50a2b24fc7df *R/utils.R
+baa017aa09f3e13080aedf99b627d50a *R/utils.R
 c21231c6d94424967320f69be702ae60 *build/vignette.rds
-3074476df5e65e97ebed2baf61836b39 *inst/doc/mhcII-hu.R
-252a920b31e3d9d7587a5070ab3f6eae *inst/doc/mhcII-hu.Rmd
-15aa0ec23a95655f4ae8399772a90fb1 *inst/doc/mhcII-hu.html
+bda7e16807fa5a0f5067f37873f78375 *inst/doc/mhcII-hu.R
+dfd63117636e5784bfcac7bcaf0236d5 *inst/doc/mhcII-hu.Rmd
+f6e8c9c25aa6a07cbd8ccd5e49a9b019 *inst/doc/mhcII-hu.html
 9259e8883885858ef15f50da7a98b191 *inst/extdata/ref/ref_human.gz
 1402ab0b764c05c8eb152a0fcc7d1711 *man/core_mut.Rd
 ab8ac4a17ae9438db50845d1b1ab4633 *man/mhcII_hu.Rd
@@ -19,4 +19,4 @@ ba677ebf0a377fe49261b5ea00c3285c *tests/testthat.R
 8ec6e37361358fd00c7eacf342f2b87e *tests/testthat/test-core_mut.R
 9acaa5475446ebee9091bb8b856cf146 *tests/testthat/test-mhcII_hu.R
 1fb89985b924bbdcdc22d5363fd4a023 *tests/testthat/test-prep_ref_hu.R
-252a920b31e3d9d7587a5070ab3f6eae *vignettes/mhcII-hu.Rmd
+dfd63117636e5784bfcac7bcaf0236d5 *vignettes/mhcII-hu.Rmd

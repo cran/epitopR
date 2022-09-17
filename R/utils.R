@@ -98,13 +98,19 @@ prep_lbl_huII <- function(alleles_in) {
 comb_pred_tbl <- function(nm_method, nm_sht, nm_fd, thold_score, thold_rank) {
   # list all of output files, and filter out empty ones (403 Forbidden, file starts with "<!DOCTYPE")
   fl <- dir_ls(nm_fd, glob =  paste0("*",nm_method, ".txt"))
-  fl <- fl[sapply(fl, file.size) > 500]
+  fl <- fl[sapply(fl, file.size) > 500] %>% as.vector()
 
   # map all non-empty predict tables into 1
   if (length(fl) > 1) {
     datout <- fl %>%
       setNames(nm = .) %>%
-      map_df(~read_tsv(.x, col_types = cols(), col_names = TRUE), .id = "id")
+      map_df(~read_tsv(.x, col_types = cols(), col_names = TRUE), .id = "id") %>%
+      as.data.frame()
+
+    tmp_antigen <- data.frame(id = datout$id, str = rep(paste0("_", nm_method, ".txt"), dim(datout)[1]))
+    tmp_antigen$antigen <- str_remove(gsub(".*/", "", tmp_antigen$id), tmp_antigen$str)
+    datout$antigen <- tmp_antigen$antigen
+
   } else {
     datout <- data.frame()
   }
@@ -113,7 +119,7 @@ comb_pred_tbl <- function(nm_method, nm_sht, nm_fd, thold_score, thold_rank) {
   if (nm_method == "netmhciipan") {
     # score_val: IC50
     datout <- datout %>%
-      mutate(antigen = str_remove(gsub(".*/", "", id), paste0("_", nm_method, ".txt"))) %>%
+      #mutate(antigen = str_remove(gsub(".*/", "", id), paste0("_", nm_method, ".txt"))) %>%
       select(-c(id, seq_num)) %>%
       filter(ic50 != "-") %>%
       mutate(pep_stim = peptide,
@@ -123,7 +129,7 @@ comb_pred_tbl <- function(nm_method, nm_sht, nm_fd, thold_score, thold_rank) {
              rank_val = as.numeric(rank)) %>%
       mutate(strength_ic50 = case_when(score_val <= min(thold_score$cutoff_netpan) ~ "strong",
                                        score_val <= max(thold_score$cutoff_netpan) ~ "weak",
-                              TRUE ~ "no"),
+                                       TRUE ~ "no"),
              strength_rank = case_when(rank_val <= min(thold_rank) ~ "strong",
                                        rank_val <= max(thold_rank) ~ "weak",
                                        TRUE ~ "no")) %>%
@@ -143,7 +149,7 @@ comb_pred_tbl <- function(nm_method, nm_sht, nm_fd, thold_score, thold_rank) {
   ###*** start of recommended ***###
   if  (str_detect(nm_method, "rec")) {
     datout <- datout %>%
-      mutate(antigen = str_remove(gsub(".*/", "", id), paste0("_", nm_method, ".txt"))) %>%
+      #mutate(antigen = str_remove(gsub(".*/", "", id), paste0("_", nm_method, ".txt"))) %>%
       select(-c(id, seq_num)) %>%
       mutate(pep_stim = peptide)
 
@@ -183,12 +189,12 @@ comb_pred_tbl <- function(nm_method, nm_sht, nm_fd, thold_score, thold_rank) {
               core = nn_align_core,
               score_val = as.numeric(nn_align_ic50),
               rank_val = as.numeric(nn_align_rank)) %>%
-       mutate(strength_ic50 = case_when(score_val <= min(thold_score$cutoff_nn_align) ~ "strong",
-                                        score_val <= max(thold_score$cutoff_nn_align) ~ "weak",
-                                        TRUE ~ "no"),
-      strength_rank = case_when(rank_val <= min(thold_rank) ~ "strong",
-                                rank_val <= max(thold_rank) ~ "weak",
-                                TRUE ~ "no")) %>%
+      mutate(strength_ic50 = case_when(score_val <= min(thold_score$cutoff_nn_align) ~ "strong",
+                                       score_val <= max(thold_score$cutoff_nn_align) ~ "weak",
+                                       TRUE ~ "no"),
+             strength_rank = case_when(rank_val <= min(thold_rank) ~ "strong",
+                                       rank_val <= max(thold_rank) ~ "weak",
+                                       TRUE ~ "no")) %>%
       filter(strength_ic50 %in% c("strong", "weak") | strength_rank %in% c("strong", "weak"))
 
     if (dim(nn_align)[1] > 0) {
@@ -243,7 +249,7 @@ comb_pred_tbl <- function(nm_method, nm_sht, nm_fd, thold_score, thold_rank) {
   if (str_detect(nm_method, "el")) {
     # score_val: percentile rank
     datout <- datout %>%
-      mutate(antigen = str_remove(gsub(".*/", "", id), paste0("_", nm_method, ".txt"))) %>%
+      #mutate(antigen = str_remove(gsub(".*/", "", id), paste0("_", nm_method, ".txt"))) %>%
       select(-c(id, seq_num)) %>%
       filter(rank != "-") %>%
       mutate(pep_stim = peptide,
@@ -253,8 +259,8 @@ comb_pred_tbl <- function(nm_method, nm_sht, nm_fd, thold_score, thold_rank) {
              rank_val = as.numeric(rank)) %>%
       mutate(strength_ic50 = "na",
              strength_rank = case_when(rank_val <= min(thold_rank) ~ "strong",
-                                      rank_val <= max(thold_rank) ~ "weak",
-                                      TRUE ~ "no")) %>%
+                                       rank_val <= max(thold_rank) ~ "weak",
+                                       TRUE ~ "no")) %>%
       filter(strength_rank %in% c("strong", "weak"))
 
     if (dim(datout)[1] > 0) {
